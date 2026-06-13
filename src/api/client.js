@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = "http://localhost:8002";
 
 async function request(path, options) {
   const res = await fetch(`${API_BASE}${path}`, {
