@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from typing import Dict, Optional
 import uvicorn
 import os
+import asyncio
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -150,6 +152,41 @@ def initialize_sample_data():
     
     satellites.update(sample_satellites)
     print(f"Initialized {len(sample_satellites)} sample satellites")
+    
+    # Initialize sample threats
+    sample_threats = {
+        "THREAT-001": Threat(
+            id="THREAT-001",
+            threat_level=ThreatLevel.HIGH,
+            missile_id="MISSILE-001",
+            target_satellite_id="SAT-001",
+            collision_probability=0.85,
+            time_to_impact=120.0,
+            miss_distance=0.0,
+            intercept_point=(35.6762, 139.6503, 550.0),
+            affected_users=2000000,
+            economic_loss=2400000000.0,
+            critical_services=["military_comms", "fleet_coordination"],
+            status="active"
+        ),
+        "THREAT-002": Threat(
+            id="THREAT-002",
+            threat_level=ThreatLevel.CRITICAL,
+            missile_id="MISSILE-002", 
+            target_satellite_id="SAT-002",
+            collision_probability=0.92,
+            time_to_impact=60.0,
+            miss_distance=0.0,
+            intercept_point=(0.0, -90.0, 20200.0),
+            affected_users=1000000000,
+            economic_loss=10000000000.0,
+            critical_services=["gps_navigation", "aviation", "banking"],
+            status="active"
+        )
+    }
+    
+    threats.update(sample_threats)
+    print(f"Initialized {len(sample_threats)} sample threats")
 
 
 # Health check endpoint
@@ -483,6 +520,136 @@ async def get_situation_assessment():
         "situation_assessment": assessment,
         "active_threats": len([t for t in threats.values() if t.status == "active"]),
         "active_satellites": len([s for s in satellites.values() if s.status == "active"])
+    }
+
+
+# Additional endpoints for Nova frontend integration
+
+@app.get("/api/iss/telemetry")
+async def get_iss_telemetry():
+    """Get ISS telemetry data (integrates with external API or mock)"""
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get("https://api.wheretheiss.at/v1/satellites/25544")
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "latitude": data["latitude"],
+                    "longitude": data["longitude"],
+                    "altitude": data["altitude"],
+                    "velocity": data["velocity"],
+                    "timestamp": data["timestamp"],
+                    "source": "LIVE"
+                }
+    except:
+        pass
+    
+    # Fallback to mock data
+    import time
+    mock_phase = time.time() % 3600 / 3600
+    return {
+        "latitude": 51.6 * (0.8 + 0.2 * (mock_phase - 0.5)),
+        "longitude": ((mock_phase * 60) % 360) - 180,
+        "altitude": 408 + 6 * (mock_phase % 2),
+        "velocity": 27580 + 60 * (mock_phase % 1.3),
+        "timestamp": int(time.time()),
+        "source": "MOCK"
+    }
+
+
+@app.get("/api/solar/status")
+async def get_solar_status():
+    """Get solar weather status"""
+    import random
+    flares = ["B1.2", "C3.4", "M1.0", "X1.8", "C7.2", "M2.5"]
+    
+    # Simulate delay
+    await asyncio.sleep(0.1)
+    
+    return {
+        "kpIndex": round(random.uniform(1, 7), 2),
+        "solarWind": random.randint(380, 620),
+        "flareClass": flares[random.randint(0, len(flares) - 1)],
+        "cmeProbability": random.randint(10, 90),
+        "updatedAt": datetime.now().isoformat()
+    }
+
+
+@app.get("/api/solar/feed")
+async def get_solar_feed():
+    """Get solar event feed"""
+    # Simulate delay
+    await asyncio.sleep(0.15)
+    
+    return [
+        {"id": "evt-401", "t": "T-00:02:14", "msg": "CORONAL HOLE 812 - high-speed stream inbound"},
+        {"id": "evt-402", "t": "T-00:18:42", "msg": "GOES-18 X-RAY FLUX nominal, monitoring band C"},
+        {"id": "evt-403", "t": "T-01:04:09", "msg": "DSCOVR magnetometer Bz flipped negative"},
+        {"id": "evt-404", "t": "T-02:31:55", "msg": "NOAA SWPC issued G1 minor storm watch"},
+        {"id": "evt-405", "t": "T-03:47:11", "msg": "Proton event probability < 12% next 24h"},
+        {"id": "evt-406", "t": "T-05:12:08", "msg": "SOHO LASCO C2 - no Earth-directed CME detected"}
+    ]
+
+
+@app.get("/api/threat/targets")
+async def get_threat_targets():
+    """Get threat targets (mapped from satellites)"""
+    # Simulate delay
+    await asyncio.sleep(0.1)
+    
+    # Map satellites to threat targets format
+    targets = []
+    for sat_id, satellite in satellites.items():
+        if satellite.status == "active":
+            import random
+            vector = random.choice(["PRO", "RET", "NORM"])
+            range_km = random.randint(50, 2000)
+            targets.append({
+                "id": f"TGT-{sat_id.replace('SAT-', '')}",
+                "designation": f"{satellite.name} - {satellite.satellite_type.upper()}",
+                "range": range_km,
+                "vector": vector
+            })
+    
+    return targets
+
+
+@app.post("/api/threat/action")
+async def log_tactical_action(action_data: dict):
+    """Log tactical threat action"""
+    # Simulate delay
+    await asyncio.sleep(0.08)
+    
+    action = action_data.get("action", "unknown")
+    
+    # Create a countermeasure based on the action
+    if action and threats:
+        threat_id = list(threats.keys())[0] if threats else "THREAT-001"
+        satellite_id = list(satellites.keys())[0] if satellites else "SAT-001"
+        
+        countermeasure = Countermeasure(
+            id=f"CM-{int(datetime.now().timestamp())}",
+            countermeasure_type="orbital_shift",
+            target_threat_id=threat_id,
+            target_satellite_id=satellite_id,
+            execution_time=datetime.now().isoformat(),
+            fuel_required=15.0,
+            duration=35.0,
+            success_probability=0.85,
+            estimated_miss_distance=150.0,
+            status="completed",
+            parameters={"action": action}
+        )
+        
+        countermeasures[countermeasure.id] = countermeasure
+    
+    import random
+    return {
+        "ok": True,
+        "action": action,
+        "timestamp": datetime.now().isoformat(),
+        "confirmation": f"ACK :: {action.upper()} :: AUTH 7-NOVEMBER-{str(random.randint(100, 999)).zfill(3)}"
     }
 
 
