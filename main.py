@@ -5,7 +5,15 @@ from typing import Dict, Optional
 import uvicorn
 import os
 from dotenv import load_dotenv
+from api.space_routes import router as space_router
+app = FastAPI(
+    title="HELIOS SENTINEL API",
+    description="AI-Powered Orbital Threat & Space Infrastructure Protection Platform",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
+app.include_router(space_router)
 # Load environment variables
 load_dotenv()
 
