@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(ls)",
+      "Exec(dir)",
+      "Exec(python)",
+      "Exec(venv\\Scripts\\python.exe)",
+      "Exec(venv\\Scripts\\uvicorn.exe)",
+      "Exec(curl)",
+      "Exec(Invoke-WebRequest)"
+    ]
+  }
+}
