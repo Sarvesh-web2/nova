@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "npm run client",
-    "dev:mock": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev:client": "npm run client",
     "client": "vite --host 0.0.0.0",
     "server": "node server/index.js",
     "build": "vite build",
