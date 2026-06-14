@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Crosshair, Satellite, Sun } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // 👉 1. Added Router hook
+import { Crosshair, Globe, Satellite, Sun } from "lucide-react";
 import BootSequence from "@/components/helios/BootSequence.jsx";
 import PortalCard from "@/components/helios/PortalCard.jsx";
 import { HELIOS } from "@/constants/testIds.js";
@@ -33,28 +34,24 @@ const portals = [
     to: "/iss",
     Icon: Satellite,
     testId: HELIOS.cardIss
+  },
+  {
+    code: "MOD-04",
+    title: "Earth Satellite Model",
+    subtitle: "Orbital Viz",
+    description: "Live 3-D Earth globe with satellite constellations, ISS tracking, and atmosphere simulation.",
+    to: "/earth",
+    Icon: Globe,
+    testId: HELIOS.cardEarth ?? "card-earth"
   }
 ];
 
 export default function Landing() {
   const [booting, setBooting] = useState(true);
-  <div
-  style={{
-    position: "fixed",
-    top: 20,
-    left: 20,
-    zIndex: 999999,
-    background: "red",
-    color: "white",
-    padding: "20px",
-    fontSize: "32px"
-  }}
->
-  LANDING ACTIVE
-</div>
+  const navigate = useNavigate(); // 👉 2. Initialized Router hook
 
   return (
-    <div data-testid={HELIOS.landingRoot} className="relative min-h-[calc(100vh-80px)]">
+    <div data-testid={HELIOS.landingRoot} className="relative min-h-[calc(100vh-80px)] overflow-hidden">
       {booting && <BootSequence duration={3000} onComplete={() => setBooting(false)} />}
       <div
         aria-hidden="true"
@@ -101,13 +98,33 @@ export default function Landing() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
           {portals.map((portal, index) => (
             <PortalCard key={portal.to} index={index} {...portal} />
           ))}
         </div>
       </div>
+
+      {/* 👉 3. THE SECRET PLANET BUTTON 👈 */}
+      {!booting && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.5, duration: 1 }}
+          onClick={() => navigate('/arcade')}
+          title="Classified // Orbital Evasion"
+          className="fixed bottom-6 right-6 z-50 group flex items-center justify-center w-14 h-14 rounded-full bg-black/40 backdrop-blur-md border border-[#00FF88]/20 shadow-[0_0_15px_rgba(0,255,136,0.1)] hover:shadow-[0_0_30px_rgba(0,255,136,0.3)] hover:border-[#00FF88]/60 transition-all duration-500 cursor-pointer"
+        >
+          {/* Planet Sphere */}
+          <div className="relative w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-950 via-[#00FF88]/80 to-[#00FF88] shadow-[inset_-2px_-2px_6px_rgba(0,0,0,0.6)] group-hover:scale-110 transition-transform duration-500">
+            {/* Inner Glow */}
+            <div className="absolute inset-0 rounded-full bg-[#00FF88] opacity-0 group-hover:opacity-40 blur-sm transition-opacity duration-500" />
+          </div>
+          {/* Planetary Ring */}
+          <div className="absolute w-10 h-3 border-[1.5px] border-[#00FF88]/40 rounded-[50%] -rotate-12 group-hover:rotate-12 group-hover:border-[#00FF88] transition-all duration-700" />
+        </motion.button>
+      )}
+
     </div>
   );
 }
-
