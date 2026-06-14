@@ -4,6 +4,9 @@ import { Crosshair, Radar, Radio, ShieldAlert, Zap } from "lucide-react";
 import PageShell from "@/components/helios/PageShell.jsx";
 import { fetchThreatTargets, logTacticalAction } from "@/api/client.js";
 import { HELIOS } from "@/constants/testIds.js";
+import DeployChaff from "@/components/threat/DeployChaff";
+import SignalSpoof from "@/components/threat/SignalSpoof";
+import OrbitalManeuver from "@/components/threat/OrbitalManeuver";
 
 const ActionBtn = ({ testId, label, code, Icon, onClick, accent = "#00FF88" }) => (
   <motion.button
@@ -41,6 +44,7 @@ export default function Threat() {
   const [critical, setCritical] = useState(false);
   const [targets, setTargets] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [activeDemo, setActiveDemo] = useState("77");
 
   useEffect(() => {
     fetchThreatTargets().then(setTargets);
@@ -94,8 +98,8 @@ export default function Threat() {
                       <span className="inline-block w-2 h-2 rounded-full bg-[#FF2D2D] animate-pulse" />
                       ALERT :: PRIORITY 1
                     </div>
-                    <div className="text-base sm:text-xl uppercase tracking-tight text-[#FF2D2D] helios-pulse">
-                      CRITICAL INTERCEPT THREAT TRIGGERED
+                    <div className="text-base sm:text-xl uppercase tracking-tight text-[#FF2D2D]">
+                      CRITICAL INTERCEPT THREAT DETECTED
                     </div>
                     <div className="text-xs text-[#FF2D2D]/70 mt-2 tracking-wider">
                       Impact window :: T-00:01:42 // Recommend immediate countermeasures.
@@ -115,48 +119,59 @@ export default function Threat() {
             </div>
 
             <div className="grid gap-3">
-              <ActionBtn testId={HELIOS.btnManeuver} code="CMD-77" label="Orbital Maneuver" Icon={Zap} onClick={() => onAction("orbital maneuver")} accent={accent} />
-              <ActionBtn testId={HELIOS.btnChaff} code="CMD-18" label="Deploy Chaff" Icon={ShieldAlert} onClick={() => onAction("deploy chaff")} accent={accent} />
-              <ActionBtn testId={HELIOS.btnSpoof} code="CMD-42" label="Signal Spoof" Icon={Radio} onClick={() => onAction("signal spoof")} accent={accent} />
+              <ActionBtn
+                testId={HELIOS.btnManeuver}
+                code="CMD-77"
+                label="Orbital Maneuver"
+                Icon={Zap}
+                accent={accent}
+                onClick={() => {
+                  setActiveDemo("77");
+                  onAction("orbital maneuver");
+                }}
+              />
+              <ActionBtn
+                testId={HELIOS.btnChaff}
+                code="CMD-18"
+                label="Deploy Chaff"
+                Icon={ShieldAlert}
+                accent={accent}
+                onClick={() => {
+                  setActiveDemo("18");
+                  onAction("deploy chaff");
+                }}
+              />
+              <ActionBtn
+                testId={HELIOS.btnSpoof}
+                code="CMD-42"
+                label="Signal Spoof"
+                Icon={Radio}
+                accent={accent}
+                onClick={() => {
+                  setActiveDemo("42");
+                  onAction("signal spoof");
+                }}
+              />
             </div>
           </div>
 
+          {/* MAIN SIMULATOR SCREEN CONTAINER */}
           <div
             data-testid={HELIOS.threatGlobe}
-            className="relative min-h-[420px] bg-[#040404] border border-[#1a1a1a] overflow-hidden flex items-center justify-center"
-            style={{ boxShadow: `inset 0 0 60px ${accent}16` }}
+            className="relative bg-[#040404] border border-[#1a1a1a] overflow-hidden flex flex-col justify-between"
+            style={{ boxShadow: `inset 0 0 60px ${accent}16`, minHeight: "420px" }}
           >
-            <div className="absolute inset-0 helios-grid opacity-20" aria-hidden="true" />
-            <motion.div
-              className="absolute rounded-full border"
-              style={{ width: 330, height: 330, borderColor: `${accent}55` }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-            />
-            <motion.div
-              className="absolute rounded-full border"
-              style={{ width: 230, height: 230, borderColor: "#555" }}
-              animate={{ rotate: -360 }}
-              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-            />
-            <Radar className="relative z-10 w-24 h-24" strokeWidth={1.1} style={{ color: accent, filter: `drop-shadow(0 0 18px ${accent})` }} />
-            {targets.map((target, index) => (
-              <motion.div
-                key={target.id}
-                className="absolute w-2 h-2 rounded-full"
-                style={{
-                  background: index === 2 ? "#FF2D2D" : "#00FF88",
-                  boxShadow: `0 0 12px ${index === 2 ? "#FF2D2D" : "#00FF88"}`,
-                  left: `${30 + index * 18}%`,
-                  top: `${32 + index * 16}%`
-                }}
-                animate={{ scale: [1, 1.8, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: index * 0.2 }}
-              />
-            ))}
-            <div className="absolute bottom-4 left-4 right-4 text-[10px] tracking-[0.3em] text-[#666] flex justify-between">
-              <span>SCAN ARC :: 360 DEG</span>
-              <span style={{ color: accent }}>RADAR ACTIVE</span>
+            <div className="p-3 border-b border-[#1a1a1a] flex justify-between items-center bg-[#060606] z-10">
+              <span className="text-[10px] tracking-[0.35em] text-[#666]">TACTICAL VISUALIZATION MATRIX</span>
+              <span className="text-[9px] px-1.5 py-0.5 border border-[#444] text-[#888] font-mono tracking-widest bg-[#020202]">
+                MODE_CMD-{activeDemo}
+              </span>
+            </div>
+
+            <div className="flex-1 w-full flex items-center justify-center relative">
+              {activeDemo === "77" && <OrbitalManeuver />}
+              {activeDemo === "18" && <DeployChaff />}
+              {activeDemo === "42" && <SignalSpoof />}
             </div>
           </div>
 
@@ -200,4 +215,3 @@ export default function Threat() {
     </div>
   );
 }
-

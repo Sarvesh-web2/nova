@@ -38,6 +38,20 @@ const portals = [
 
 export default function Landing() {
   const [booting, setBooting] = useState(true);
+  <div
+  style={{
+    position: "fixed",
+    top: 20,
+    left: 20,
+    zIndex: 999999,
+    background: "red",
+    color: "white",
+    padding: "20px",
+    fontSize: "32px"
+  }}
+>
+  LANDING ACTIVE
+</div>
 
   return (
     <div data-testid={HELIOS.landingRoot} className="relative min-h-[calc(100vh-80px)]">
