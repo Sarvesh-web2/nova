@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import "./App.css";
 
 import Marquee from "@/components/helios/Marquee.jsx";
@@ -12,26 +11,16 @@ import Solar from "@/pages/Solar.jsx";
 import Threat from "@/pages/Threat.jsx";
 import ISS from "@/pages/ISS.jsx";
 import Earth from "@/pages/Earth.jsx";
-// 👉 Your new Easter Egg game import
-import Arcade from "@/pages/Arcade.jsx"; 
+import Arcade from "@/pages/Arcade.jsx";
 
 export default function App() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
   useEffect(() => {
     let fired = false;
-
-    const trigger = () => {
-      if (fired) return;
-      fired = true;
-      setSidebarVisible(true);
-    };
-
-    // First downward wheel scroll
-    const onWheel = (e) => { if (e.deltaY > 0) trigger(); };
-    // Or any scroll past 40 px
-    const onScroll = () => { if (window.scrollY > 40) trigger(); };
-
+    const trigger = () => { if (fired) return; fired = true; setSidebarVisible(true); };
+    const onWheel  = (e) => { if (e.deltaY > 0) trigger(); };
+    const onScroll = ()  => { if (window.scrollY > 40) trigger(); };
     window.addEventListener("wheel",  onWheel,  { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
@@ -45,24 +34,24 @@ export default function App() {
       <BrowserRouter>
         <Marquee position="top" />
         <ScanlineOverlay />
-
-        {/* Sidebar lives outside <main> so it overlays all routes */}
         <ModelSidebar visible={sidebarVisible} />
 
         <main className="flex-1 relative">
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/"       element={<Landing />} />
-              <Route path="/solar"  element={<Solar />}   />
-              <Route path="/threat" element={<Threat />}  />
-              <Route path="/iss"    element={<ISS />}     />
-              <Route path="/earth"  element={<Earth />}   />
-              
-              {/* THE EASTER EGG CATCH-ALL */}
-              {/* Any broken link automatically launches Orbital Evasion */}
-              <Route path="*"       element={<Arcade />} />
-            </Routes>
-          </AnimatePresence>
+          {/*
+            AnimatePresence removed from here — wrapping Routes causes it to
+            unmount/remount the active route on every internal state change
+            (e.g. setScore, setPhase), which tears down the Arcade game loop
+            instantly. Add AnimatePresence inside individual pages that need
+            enter/exit motion instead.
+          */}
+          <Routes>
+            <Route path="/"       element={<Landing />} />
+            <Route path="/solar"  element={<Solar />}   />
+            <Route path="/threat" element={<Threat />}  />
+            <Route path="/iss"    element={<ISS />}     />
+            <Route path="/earth"  element={<Earth />}   />
+            <Route path="*"       element={<Arcade />}  />
+          </Routes>
         </main>
 
         <Marquee position="bottom" />
